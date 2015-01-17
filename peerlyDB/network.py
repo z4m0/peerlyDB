@@ -7,13 +7,13 @@ import pickle
 from twisted.internet.task import LoopingCall
 from twisted.internet import defer, reactor, task
 
-from kademlia.log import Logger
-from kademlia.protocol import KademliaProtocol
-from kademlia.utils import deferredDict, digest
-from kademlia.storage import ForgetfulStorage
-from kademlia.node import Node
-from kademlia.crawling import ValueSpiderCrawl
-from kademlia.crawling import NodeSpiderCrawl
+from peerlyDB.log import Logger
+from peerlyDB.protocol import KademliaProtocol
+from peerlyDB.utils import deferredDict, digest
+from peerlyDB.storage import ForgetfulStorage
+from peerlyDB.node import Node
+from peerlyDB.crawling import ValueSpiderCrawl
+from peerlyDB.crawling import NodeSpiderCrawl
 
 
 class Server(object):
@@ -117,7 +117,7 @@ class Server(object):
             A `list` of IP's.  If no one can be contacted, then the `list` will be empty.
         """
         def handle(results):
-            ips = [ result[1][0] for result in results if result[0] ]
+            ips = [ (result[1][0],result[1][1]) for result in results if result[0] ]
             self.log.debug("other nodes think our ip is %s" % str(ips))
             return ips
 

@@ -1,8 +1,8 @@
 from collections import Counter
 
-from kademlia.log import Logger
-from kademlia.utils import deferredDict
-from kademlia.node import Node, NodeHeap
+from peerlyDB.log import Logger
+from peerlyDB.utils import deferredDict
+from peerlyDB.node import Node, NodeHeap
 
 
 class SpiderCrawl(object):

@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
-from kademlia import version
 
 setup(
-    name="kademlia",
-    version=version,
-    description="Kademlia is a distributed hash table for decentralized peer-to-peer computer networks.",
-    author="Brian Muller",
-    author_email="bamuller@gmail.com",
+    name="peerlyDB",
+    version="0.1.0",
+    description="PeerlyDB is a database based on Kademlia",
+    author="Marti Zamora",
     license="MIT",
-    url="http://github.com/bmuller/kademlia",
+    url="https://github.com/z4m0/peerlyDB",
     packages=find_packages(),
     requires=["twisted", "rpcudp"],
     install_requires=['twisted>=14.0', "rpcudp>=1.0"]

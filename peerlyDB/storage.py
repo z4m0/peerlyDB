@@ -8,6 +8,9 @@ from collections import OrderedDict
 from zope.interface import implements
 from zope.interface import Interface
 
+from peerlyDB.utils import digest
+from peerlyDB.log import Logger
+import json, base64
 
 class IStorage(Interface):
     """
@@ -43,22 +46,59 @@ class IStorage(Interface):
 class ForgetfulStorage(object):
     implements(IStorage)
 
-    def __init__(self, ttl=604800):
+    def __init__(self, ttl=604800, keySize=50):
         """
         By default, max age is a week.
+        Only remembers last 50 values for a given key
         """
         self.data = OrderedDict()
         self.ttl = ttl
+        self.keySize = keySize
+        self.log = Logger(system=self)
 
     def __setitem__(self, key, value):
-        if key in self.data:
-            del self.data[key]
-        self.data[key] = (time.time(), value)
+        
+        value = json.loads(value)
+        #if a full key is sent to us...
+        if self._isVersionsValue(value):
+            self.log.msg('Got versions value for value:%s' % (str(value)))
+            if not (key in self.data):
+              self.data[key] = {}
+            #Merge the two versions
+            self.data[key] = OrderedDict(sorted(value.items()+self.data[key].items(), key=lambda t: t[0]))
+            #TODO remove the first elements if size > self.keySize
+            return
+        
+        self.log.msg('The value has not versions')
+        #create a new version
+        if not (key in self.data):
+            self.data[key] = OrderedDict()
+        dig = base64.b64encode(digest(value))
+        
+        #if value already exists, just refresh it
+        for date, (d,v) in self.data[key].iteritems():
+            if(d == dig):
+                del self.data[key][date]
+                break
+        self.data[key][str(time.time())] = (dig,value)
+        if len (self.data[key]) > self.keySize:
+            self.data[key].popitem(last=False)
         self.cull()
-
+        
+    def _isVersionsValue(self,value):
+    #A versions value is a dictionary all made of versions
+        try:
+          for k in value:
+            float(k)
+        except ValueError:
+          return False
+        return True
+    
     def cull(self):
-        for k, v in self.iteritemsOlderThan(self.ttl):
-            self.data.popitem(last=False)
+        pass
+        #Let's ignore this for now...
+        #for k, v in self.iteritemsOlderThan(self.ttl):
+        #    self.data.popitem(last=False)
 
     def get(self, key, default=None):
         self.cull()
@@ -68,7 +108,7 @@ class ForgetfulStorage(object):
 
     def __getitem__(self, key):
         self.cull()
-        return self.data[key][1]
+        return str(json.dumps(self.data[key]))
 
     def __iter__(self):
         self.cull()

@@ -4,10 +4,10 @@ from twisted.internet import defer
 
 from rpcudp.protocol import RPCProtocol
 
-from kademlia.node import Node
-from kademlia.routing import RoutingTable
-from kademlia.log import Logger
-from kademlia.utils import digest
+from peerlyDB.node import Node
+from peerlyDB.routing import RoutingTable
+from peerlyDB.log import Logger
+from peerlyDB.utils import digest
 
 
 class KademliaProtocol(RPCProtocol):
@@ -28,6 +28,7 @@ class KademliaProtocol(RPCProtocol):
         return ids
 
     def rpc_stun(self, sender):
+        self.log.info("stun response %s"% str(sender))
         return sender
 
     def rpc_ping(self, sender, nodeid):
