@@ -57,11 +57,12 @@ class ForgetfulStorage(object):
         self.log = Logger(system=self)
 
     def __setitem__(self, key, value):
-        
-        value = json.loads(value)
+        self.log.debug('Setting value %s of type %s' % (str(value),type(value)))
+        if isinstance(value,str):
+          value = json.loads(value) #TODO put this in a try and check elif dictionary
         #if a full key is sent to us...
         if self._isVersionsValue(value):
-            self.log.msg('Got versions value for value:%s' % (str(value)))
+            self.log.debug('Got versions value for value:%s' % (str(value)))
             if not (key in self.data):
               self.data[key] = {}
             #Merge the two versions
@@ -69,7 +70,7 @@ class ForgetfulStorage(object):
             #TODO remove the first elements if size > self.keySize
             return
         
-        self.log.msg('The value has not versions')
+        self.log.debug('The value has not versions')
         #create a new version
         if not (key in self.data):
             self.data[key] = OrderedDict()

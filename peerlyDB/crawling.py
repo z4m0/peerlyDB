@@ -1,9 +1,9 @@
-from collections import Counter
+from collections import OrderedDict
 
 from peerlyDB.log import Logger
 from peerlyDB.utils import deferredDict
 from peerlyDB.node import Node, NodeHeap
-
+import json, base64
 
 class SpiderCrawl(object):
     """
@@ -106,17 +106,27 @@ class ValueSpiderCrawl(SpiderCrawl):
         make sure we tell the nearest node that *didn't* have
         the value to store it.
         """
-        valueCounts = Counter(values)
-        if len(valueCounts) != 1:
-            args = (self.node.long_id, str(values))
-            self.log.warning("Got multiple values for key %i: %s" % args)
-        value = valueCounts.most_common(1)[0][0]
+        vals = []
+        for v in values:
+            vals += json.loads(v).items() #TODO put this in try
+        values = OrderedDict(sorted(vals, key=lambda t: t[0]))
+        
+        self.log.info("Got values for key %i: %s" % (self.node.long_id, str(values)))
+        
+        fvalues = dict()
+        digestsSeen = set()
+        for key, value in values.iteritems():
+          if not (value[0] in digestsSeen):
+            fvalues[key] = value
+            digestsSeen.add(key)
+
+        self.log.info("Transformed values %s" % (str(fvalues)))
 
         peerToSaveTo = self.nearestWithoutValue.popleft()
         if peerToSaveTo is not None:
-            d = self.protocol.callStore(peerToSaveTo, self.node.id, value)
-            return d.addCallback(lambda _: value)
-        return value
+            d = self.protocol.callStore(peerToSaveTo, self.node.id, fvalues)
+            return d.addCallback(lambda _: fvalues)
+        return fvalues
 
 
 class NodeSpiderCrawl(SpiderCrawl):
